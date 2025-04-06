@@ -10,6 +10,7 @@ void enqueue_task(struct rq *rq, struct task_struct *p);
 struct task_struct* pick_next_task(struct rq *rq, struct task_struct *prev);
 void put_prev_task(struct rq *rq, struct task_struct *p);
 
+
 void start_task_scheduling_simulation() {
     // get the mock processes 
     FILE *input_file = fopen("input", "r");
@@ -72,6 +73,7 @@ void start_task_scheduling_simulation() {
     
     return;
 }
+
 
 int main() {
     start_task_scheduling_simulation();
