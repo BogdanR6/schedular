@@ -1,2 +1,2 @@
-hello: src/main.c
-	gcc src/main.c -o s
+sched: src/main.c
+	gcc src/main.c -g -o sched
