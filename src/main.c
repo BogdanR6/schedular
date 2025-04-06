@@ -4,7 +4,6 @@
 #include "../include/task.h"
 #include "../include/scheduler.h"
 
-// Function declarations
 void start_task_scheduling_simulation();
 struct rq* init_runqueue();
 void enqueue_task(struct rq *rq, struct task_struct *p);
@@ -53,25 +52,23 @@ void start_task_scheduling_simulation() {
     const int time_quantum = 1;
     
     while (runqueue->nr_running > 0) {
-        // Pick next task
         struct task_struct *current = pick_next_task(runqueue, runqueue->curr);
         runqueue->curr = current;
         
         // Simulate task execution for one time quantum
         printf("Time %lu: Running task %d (remaining time: %d)\n", 
-               runqueue->clock, current->id, current->duration);
+               runqueue->rq_clock, current->id, current->duration);
         
-        // Update clock
-        runqueue->clock += time_quantum;
+        runqueue->rq_clock += time_quantum;
         
         // Mark task as having run, update its state
         put_prev_task(runqueue, current);
     }
     
     printf("------------------------------------------------\n");
-    printf("All tasks completed at time %lu\n", runqueue->clock);
+    printf("All tasks completed at time %lu\n", runqueue->rq_clock);
     
-    free(runqueue);
+    free(runqueue); // the tasks are freed once they are complete 
     
     return;
 }

@@ -11,13 +11,13 @@ struct rq* init_runqueue() {
 	
 	new_rq->nr_running = 0;
 	new_rq->curr = NULL;
+	new_rq->head = NULL;
 	new_rq->idle = NULL;
-	new_rq->clock = 0;
+	new_rq->rq_clock = 0;
 	
 	return new_rq;
 }
 
-// (circular linked list)
 void enqueue_task(struct rq *rq, struct task_struct *p) {
 	if (!rq || !p) return;
 
@@ -26,12 +26,10 @@ void enqueue_task(struct rq *rq, struct task_struct *p) {
 	// If queue is empty
 	if (rq->nr_running == 0) {
 		rq->curr = p;
-		rq->tail = p;
-		p->next = p;  // create circular list
+		rq->head = p;
 	} else {
-		struct task_struct *last = rq->tail;
-		p->next = last->next;  
-		last->next = p;      
+		p->next = rq->head;
+		rq->head = p;
 	}
 	
 	rq->nr_running++;
@@ -40,15 +38,17 @@ void enqueue_task(struct rq *rq, struct task_struct *p) {
 
 struct task_struct* pick_next_task(struct rq *rq, struct task_struct *prev) {
 	if (!rq || rq->nr_running == 0) {
-		return rq->idle;  // Return idle task if no tasks are running
+		rq->curr = rq->idle;  // Return idle task if no tasks are running
+		return rq->curr;
 	}
 	
 	// If no previous task, return the first task
-	if (!prev) {
-		return rq->tail->next;
-	}
-	
-	return prev->next;
+	if (!prev || prev->next == NULL) {
+		rq->curr = rq->head;
+	} else
+		rq->curr = prev->next;
+
+	return rq->curr;
 }
 
 void put_prev_task(struct rq *rq, struct task_struct *p) {
@@ -62,15 +62,23 @@ void put_prev_task(struct rq *rq, struct task_struct *p) {
 		
 		// only one task in the queue
 		if (rq->nr_running == 1) {
-			// free(rq->curr);
+			free(rq->curr);
 			rq->curr = NULL;
+			rq->head = NULL;
 		} else {
-			struct task_struct *prev = rq->tail;
-			while (prev->next != p) {
+			struct task_struct *prev = rq->head;
+			while (prev->next != NULL && prev->next != p) {
 				prev = prev->next;
 			}
-			prev->next = p->next;
-			// free(p);
+
+			if (prev->next == NULL) {
+				rq->head = rq->head->next;
+			} else {
+				prev->next = p->next;
+			}
+
+			rq->curr = prev;
+			free(p);
 		}
 		
 		rq->nr_running--;
